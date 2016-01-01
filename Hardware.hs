@@ -69,9 +69,11 @@ writePort Right i n = putTMVar (rightOut n) i
 writePort Any i n = toAny n i -- why do the args flip? why do I have this?
 
 nextInst :: Node -> Node
-nextInst = undefined
+nextInst n = if (programCounter n + 1 == (length $ insts n)) || (length $ insts n) == 0
+             then n{programCounter = 0} else n{programCounter = (programCounter n)+1}
 
 interpStep :: Instruction -> Node -> STM Node
+interpStep (LAB l) n = return n
 interpStep NOP n = return n
 interpStep SWP n = let accVal = acc n
                        bakVal = bak n
