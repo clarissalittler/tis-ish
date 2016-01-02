@@ -73,31 +73,31 @@ nextInst n = if (programCounter n + 1 == (length $ insts n)) || (length $ insts 
              then n{programCounter = 0} else n{programCounter = (programCounter n)+1}
 
 interpStep :: Instruction -> Node -> STM Node
-interpStep (LAB l) n = return n
-interpStep NOP n = return n
+interpStep (LAB l) n = return $ nextInst n
+interpStep NOP n = return $ nextInst n
 interpStep SWP n = let accVal = acc n
                        bakVal = bak n
-                   in return $ n{acc = bakVal, bak = accVal}
+                   in return $ nextInst $ n{acc = bakVal, bak = accVal}
 interpStep SAV n = let accVal = acc n
-                   in return $ n{bak = accVal}
+                   in return $ nextInst $ n{bak = accVal}
 interpStep (AddLit i) n = let oldAcc = acc n 
-                      in return $ n{acc = oldAcc + i}
+                      in return $ nextInst $ n{acc = oldAcc + i}
 interpStep (SubLit i) n = let oldAcc = acc n
-                      in return $ n{acc = oldAcc -1}
+                      in return $ nextInst $ n{acc = oldAcc -1}
 interpStep (AddPort d) n = do
   i <- readPort d n
-  return $ n{acc = (acc n) + i}
+  return $ nextInst $ n{acc = (acc n) + i}
 interpStep (SubPort d) n = do
   i <- readPort d n
-  return $ n{acc = (acc n) - i}
-interpStep (MovInt i Nothing) n = return n{ acc = i}
-interpStep (MovInt i (Just d)) n = (writePort d i n) >> return n
+  return $ nextInst $ n{acc = (acc n) - i}
+interpStep (MovInt i Nothing) n = return $ nextInst $ n{ acc = i}
+interpStep (MovInt i (Just d)) n = (writePort d i n) >> (return $ nextInst n)
 interpStep (MOV Nothing Nothing) n = error "I'm pretty sure this isn't allowed"
-interpStep (MOV Nothing (Just d)) n = (writePort d (acc n) n) >> return n
+interpStep (MOV Nothing (Just d)) n = (writePort d (acc n) n) >> (return $ nextInst n)
 interpStep (MOV (Just d) Nothing) n = do
   i <- readPort d n
-  return $ n{acc = i}
+  return $ nextInst $ n{acc = i}
 interpStep (MOV (Just d) (Just d')) n = do
   i <- readPort d n
   writePort d' i n
-  return n
+  return $ nextInst n
