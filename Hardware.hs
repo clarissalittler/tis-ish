@@ -72,6 +72,14 @@ nextInst :: Node -> Node
 nextInst n = if (programCounter n + 1 == (length $ insts n)) || (length $ insts n) == 0
              then n{programCounter = 0} else n{programCounter = (programCounter n)+1}
 
+jmphelper' :: (Int -> Bool) -> Node -> Lab -> Maybe Node
+jmphelper' c n l = let accVal = acc n 
+                  in if (c accVal) then toLab l n else Just (nextInst n)
+
+jmphelper c n l = case jmphelper' c n l of
+                    Nothing -> error $ "no label: " ++ l
+                    Just n' -> return n'
+
 interpStep :: Instruction -> Node -> STM Node
 interpStep (LAB l) n = return $ nextInst n
 interpStep NOP n = return $ nextInst n
@@ -101,3 +109,15 @@ interpStep (MOV (Just d) (Just d')) n = do
   i <- readPort d n
   writePort d' i n
   return $ nextInst n
+interpStep (JMP l) n = case toLab l n of
+                         Nothing -> error $ "could not find label: " ++ l
+                         Just n -> return n
+interpStep (JEZ l) n = jmphelper (==0) n l
+interpStep (JGZ l) n = jmphelper (>0) n l
+interpStep (JLZ l) n = jmphelper (<0) n l
+interpStep (JNZ l) n = jmphelper (/=0) n l
+interpStep (JRO i) n = let pCount = programCounter n
+                           numInsts = length $ insts n
+                           fix x | x < 0 = 0
+                                 | x >= numInsts = numInsts -1
+                       in return $ n{programCounter = (fix $ pCount + i)}
