@@ -17,6 +17,13 @@ data Instruction = JMP Lab | AddLit Int | SubLit Int | AddPort Port | SubPort Po
                  deriving Show
 -- I'm not completely confident yet that this covers all of the MOV cases properly, but I think it does
 
+-- one thing I haven't figured out is how I want to synchronize stacks together
+-- what we need is for the stack to be modified any time the TMVar is filled.
+-- I supposed the easiest way is for the stack to have its own simulation step in which it empties the in
+-- TMVar, pushing that into the stack and then pop from the stack into the out channel. Of course that doesn't
+-- quite work does it? Hrmmm 
+data StackNode = Stack { stack :: [Int]}
+
 data Node = Node {leftIn :: TMVar Int,
                   rightIn :: TMVar Int,
                   downIn :: TMVar Int,
@@ -122,3 +129,7 @@ interpStep (JRO i) n = let pCount = programCounter n
                                  | x >= numInsts = numInsts -1
                        in return $ n{programCounter = (fix $ pCount + i)}
 
+
+{- 
+   So now we need code to actually create a map of nodes
+-}
