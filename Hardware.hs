@@ -121,3 +121,4 @@ interpStep (JRO i) n = let pCount = programCounter n
                            fix x | x < 0 = 0
                                  | x >= numInsts = numInsts -1
                        in return $ n{programCounter = (fix $ pCount + i)}
+
