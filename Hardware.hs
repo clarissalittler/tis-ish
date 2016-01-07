@@ -11,6 +11,9 @@ data Port = Up | Down | Left | Right | Any
 
 type Loc = Maybe Port -- Nothing means Acc
 
+-- one thing I want to add into this, and am not quite sure how, is the ability for these nodes to be programmable
+-- like what I want is for us to have a way to take a network of nodes and feed instructions into them.
+-- maybe this will all make more sense to me after I spend more time studying instruction sets
 data Instruction = JMP Lab | AddLit Int | SubLit Int | AddPort Port | SubPort Port
                  | JEZ Lab | JGZ Lab | JLZ Lab | JNZ Lab | JRO Int | NOP | MOV Loc Loc | MovInt Int Loc
                  | SAV | SWP | LAB Lab
@@ -22,6 +25,8 @@ data Instruction = JMP Lab | AddLit Int | SubLit Int | AddPort Port | SubPort Po
 -- I supposed the easiest way is for the stack to have its own simulation step in which it empties the in
 -- TMVar, pushing that into the stack and then pop from the stack into the out channel. Of course that doesn't
 -- quite work does it? Hrmmm 
+-- I feel like we perhaps need a separate instruction for popping and pushing to a stack
+-- I'm not sure if that's cheap, though. 
 data StackNode = Stack { stack :: [Int]}
 
 data Node = Node {leftIn :: TMVar Int,
